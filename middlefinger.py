@@ -1,3 +1,3 @@
 ### Implementation of DLA
-x = 5
+x = 42
 print(x)
