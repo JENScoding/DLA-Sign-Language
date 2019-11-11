@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
-
+import os
 
 # load the dataset as with pandas
-train = pd.read_csv('C:/Users/anton/OneDrive/Desktop/Test/sign_mnist_train.csv')
-test = pd.read_csv('C:/Users/anton/OneDrive/Desktop/Test/sign_mnist_test.csv')
+os.chdir('./../sign-language-mnist')
+train = pd.read_csv('sign_mnist_train.csv')
+test = pd.read_csv('sign_mnist_test.csv')
 
 # show head of dataset
 print(train.head())
