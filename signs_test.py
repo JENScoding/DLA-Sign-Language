@@ -35,8 +35,8 @@ images = np.array([np.reshape(i, (28, 28)) for i in images])
 images = np.array([i.flatten() for i in images])
 
 # plot image - how does it look like
-plt.imshow(images[0].reshape(28,28))
-#plt.show()
+plt.imshow(images[0].reshape(28,28), cmap=plt.cm.binary)
+plt.show()
 
 # split data set into training and test set - 70% - 30%
 x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size = 0.3, random_state = 101)
