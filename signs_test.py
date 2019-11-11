@@ -48,10 +48,11 @@ batch_size = 128
 num_classes = 24
 epochs = 10
 
-# normalizing training data set - why divide by 255?????
+# normalizing training data set
 # what happens if we do not normalize?
-x_train = x_train / 255
-x_test = x_test / 255
+
+x_train = x_train / train.values.max()
+x_test = x_test / train.values.max()
 
 x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
 
