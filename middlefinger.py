@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import os
+from collections import Counter
+import string
+
 rng = np.random
 
 # load the dataset as with pandas
@@ -17,10 +20,18 @@ print(train.head())
 print(test.head())
 print(train.shape)
 
-#Since our target variable are in categorical(nomial) - binarize the labels
-#label_binarizer = LabelBinarizer()
-#labels = label_binarizer.fit_transform(train['label'].values)
-#print(labels)
+# extra data frame for labels (letters)
+print(type(train))
+labels = train.iloc[:, 0]
+print(labels)
+print(min(labels), max(labels), Counter(labels))
+print(np.unique(labels))
+
+# dictonary for numbers of the labels
+un_labels = np.unique(labels)
+letters = np.delete(np.array(list(string.ascii_lowercase[0:25])),9)
+s = pd.Series(letters, index=un_labels)
+dict_letters = s.to_dict()
 
 #drop the labels from training dataset - first column
 train.drop('label', axis = 1, inplace = True)
@@ -29,13 +40,18 @@ train.drop('label', axis = 1, inplace = True)
 # Reshape the images
 images = train.values
 print(images.shape)
-images = np.array([np.reshape(i, (28, 28)) for i in images])
-print(images.shape)
-images = np.array([i.flatten() for i in images])
+images = np.reshape(images , (27455, 28, 28))
 print(images.shape)
 
 # plot image - how does it look like
-plt.imshow(images[0].reshape(28,28), cmap=plt.cm.binary)
+print(dict_letters[labels[0]])
+plt.figure()
+plt.imshow(images[0], cmap=plt.cm.binary, interpolation="bicubic")
+plt.show()
+
+print(dict_letters[labels[90]])
+plt.figure()
+plt.imshow(images[90], cmap=plt.cm.binary, interpolation="bicubic")
 plt.show()
 
 #Variable initialization
