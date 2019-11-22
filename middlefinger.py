@@ -96,9 +96,9 @@ exit()
 # Set model hidden layer weights and bias, with 10 hidden units
 # weight initialized uniformly between -10 and 10
 # bias initialized with zeros
-w = tf.get_variable("weightsx", shape=(28*28, 10),
+w = tf.get_variable("weightsxy", shape=(28*28, 10),
                     initializer=tf.random_uniform_initializer(-10,10))
-b = tf.get_variable("biasesx", shape=[10], initializer=tf.zeros_initializer())
+b = tf.get_variable("biasesxy", shape=[10], initializer=tf.zeros_initializer())
 
 # add an Op to initialize global variables
 opi = tf.global_variables_initializer()
@@ -115,7 +115,7 @@ with tf.Session() as sess:
 # create the input placeholder -> tf Graph Input
 x = tf.placeholder(tf.float32, shape=[None, 28*28], name="x")
 
-# create MatMul node
+# create MatMul node, matmul performs matrix multiplication
 x_w = tf.matmul(x, w, name="MatMul")
 # create Add node
 x_w_b = tf.add(x_w, b, name="Add")
@@ -131,18 +131,36 @@ with tf.Session() as sess:
     # feed it to placeholder a via the dict
     print(sess.run(h, feed_dict=d))
     print(sess.run(h, feed_dict=d).shape)
-    print(sess.run(b))
 
+# visualisation of graph
+# launch the graph in a session
+with tf.Session() as sess:
+    # visualisation of graph, generate log file
+    log_gen = tf.summary.FileWriter('../DLA-Sign-Language/tf_graphs', sess.graph)
+    # initialize variables
+    sess.run(opi)
+    # create the dictionary:
+    d = {x: train.values}
+    # feed it to placeholder a via the dict
+    print(sess.run(h, feed_dict=d))
+    print(sess.run(h, feed_dict=d).shape)
 
-b_h = tf.Variable(np.random.randn(3, 1), name="bias1")
+# then type in terminal: tensorboard --logdir="./tf_graphs" --port 6006 and open link (make sure to have right cd)
 
-# Set model output layer weights and bias
-W_o = tf.Variable(rng.randn(1, 3), name="weight2")
-b_o = tf.Variable(rng.randn(1, 1), name="bias2")
+# add histogramm of images to graphs
+histogram_summary = tf.summary.histogram('My_histogram_summary', train.values)
 
-# Construct a linear model
-h = tf.nn.sigmoid(tf.add(tf.matmul(W_h, X), b_h))
-pred = tf.nn.sigmoid(tf.add(tf.matmul(W_o, h), b_o))
+# launch the graph in a session
+with tf.Session() as sess:
+    # visualisation of graph, generate log file
+    log_gen = tf.summary.FileWriter('../DLA-Sign-Language/tf_graphs', sess.graph)
+    # loop over several initializations of the variable
+    # initialize variables
+    sess.run(opi)
+    # ____step 3:____ evaluate the merged summaries
+    summary = sess.run(histogram_summary)
+    # s____step 4:____ add the summary to the writer (i.e. to the event file) to write on the disc
+    log_gen.add_summary(summary)
 
 
 # with tf.GradientTape() as t:
