@@ -36,7 +36,7 @@ letters = np.delete(np.array(list(string.ascii_lowercase[0:25])), 9)
 s = pd.Series(letters, index=un_labels)
 dict_letters = s.to_dict()
 
-#drop the labels from training dataset - first column
+# drop the labels from training dataset - first column
 train.drop('label', axis=1, inplace=True)
 
 # Reshape the images
