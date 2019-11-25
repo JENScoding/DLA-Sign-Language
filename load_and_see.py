@@ -90,3 +90,4 @@ del letters, s, un_labels, which, all_ds
 
 dill.dump_session("../DLA-Sign-Language/data.pkl")
 
+
