@@ -82,7 +82,8 @@ model.add(Dense(num_classes, activation = 'softmax'))
 model.compile(loss = keras.losses.categorical_crossentropy, optimizer = keras.optimizers.Adam(),
               metrics=['accuracy'])
 
-history = model.fit(x_train, y_train, validation_data = (x_test, y_test), epochs = epochs, batch_size = batch_size)
-
+# test model on validation data - split = 0.3
+history = model.fit(x_train, y_train, validation_split=0.3, epochs = epochs, batch_size = batch_size)
+# history = model.fit(x_train, y_train, validation_data = (x_test, y_test), epochs = epochs, batch_size = batch_size)
 
 
