@@ -10,50 +10,58 @@ from sklearn.model_selection import train_test_split
 os.chdir('C:/Users/anton/Desktop/Statistik_master/Deep learning/Sign Language/Deep learning/Data')
 train = pd.read_csv('sign_mnist_train.csv')
 test = pd.read_csv('sign_mnist_test.csv')
+data = pd.concat([train, test], ignore_index=True)
 
-#print('train Shape:', train.shape)
-#print('test Shape:', test.shape)
-#print("Number of pixels in each image:", train.shape[1])
+# show head of dataset
+print(train.head())
+print(test.head())
+print(train.shape)
 
-# Binarize labels
+#Since our target variable are in categorical(nomial) - binarize the labels
 label_binarizer = LabelBinarizer()
-labels = label_binarizer.fit_transform(train['label'].values)
-#Print labels for test
+labels = label_binarizer.fit_transform(data['label'].values)
 print(labels)
 
 #drop the labels from training dataset - first column
-train.drop('label', axis=1, inplace=True)
+data.drop('label', axis=1, inplace=True)
 
 # Reshape the images
-images = train.values
+images = data.values
 images = np.array([np.reshape(i, (28, 28)) for i in images])
 images = np.array([i.flatten() for i in images])
 
 # split data set into training and test set - 70% - 30%
 x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=0.3, random_state=101)
 
+
 # Define the helper Function
+# weights for convolutional layers - initialized randomly with truncated normal
 def weight_variable(shape):
     initial = tf.random.truncated_normal(shape, stddev=0.1)
     return(tf.Variable(initial))
 
+#bias in convolutional layers
 def bias_variable(shape):
     initial = tf.constant(0.1, shape
     =shape)
     return(tf.Variable(initial))
 
+# specify convolution we are using (full convolution)
 def conv2d(x, W):
     return(tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME'))
 
+# max pool = half the size across height/width - 1/4 size of feature map
 def max_pool_2x2(x):
     return(tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                           strides=[1, 2, 2, 1], padding='SAME'))
 
+# linear convolution with bias, followed by ReLU nonlinearity
 def conv_layer(input, shape):
     W = weight_variable(shape)
     b = bias_variable([shape[3]])
     return(tf.nn.relu(conv2d(input, W) + b))
 
+# standard full layer with bias
 def full_layer(input, size):
     in_size = int(input.get_shape()[1])
     W = weight_variable([in_size, size])
@@ -64,14 +72,16 @@ def full_layer(input, size):
 tf.compat.v1.disable_eager_execution()
 
 
-# Define Placeholders
+# Define Placeholders or images and labels
 x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784])
 y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24])
 
 print(len(x_test))
 
-
+# reshape image data into 2D iamge format with size 28x28x1
 x_image = tf.reshape(x, [-1, 28, 28, 1])
+
+# two layers of convolution and pooling
 conv1 = conv_layer(x_image, shape=[3, 3, 1, 32])
 conv1_pool = max_pool_2x2(conv1)
 
@@ -88,6 +98,7 @@ keep_prob = tf.compat.v1.placeholder(tf.float32)
 # rate set to 1-keep_prob in TensorFlow2.0
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
+# output = fully connected layer with 24 units(labels of handsigns)
 y_conv = full_layer(full1_drop, 24)
 
 # optimize batch size and number of steps
@@ -135,7 +146,7 @@ with tf.compat.v1.Session() as sess:
 
         sess.run(train_step, feed_dict={x: batch_xs,
                                         y_: batch_ys,
-                                        keep_prob: 0.7})
+                                        keep_prob: 0.5})
 # aus buch - funktioniert mit Dimensionen nicht -eigentlich dataset in mehrer Gruppen splitten - len(x_test) aber Primzahl
     X = x_test.reshape(1, len(x_test), 784)
     Y = y_test.reshape(1, len(y_test), 24)
