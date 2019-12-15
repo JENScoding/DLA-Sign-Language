@@ -23,6 +23,7 @@ VAL_SIZE = FLAGS.val_size
 INIT_STDDEV = FLAGS.init_stddev
 EPOCHS = FLAGS.epochs
 BATCH_SIZE = FLAGS.batch_size
+KEEP_PROB = FLAGS.keep_prob
 
 
 # load data
@@ -107,8 +108,9 @@ conv2_pool = max_pool_2x2(conv2)
 conv2_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
 full_1 = tf.nn.relu(full_layer(conv2_flat, 1024))
 
-keep_prob = tf.compat.v1.placeholder(tf.float32)
+
 # rate set to 1-keep_prob in TensorFlow2.0
+keep_prob = tf.compat.v1.placeholder(tf.float32)
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
@@ -173,7 +175,7 @@ with tf.compat.v1.Session() as sess:
 
             sess.run(train_step, feed_dict={x: batch_xs,
                                             y_: batch_ys,
-                                            keep_prob: 0.5})
+                                            keep_prob: KEEP_PROB})
 
             if i % 100 == 0:
                 # Calculate and display the batch loss and accuracy
@@ -188,7 +190,7 @@ with tf.compat.v1.Session() as sess:
         # Run validation after every epoch
         loss_valid, acc_valid = sess.run([cross_entropy, accuracy], feed_dict={x: x_val,
                                                                       y_: y_val,
-                                                                      keep_prob: 1.0})
+                                                                      keep_prob: KEEP_PROB})
         print('---------------------------------------------------------')
         print("Epoch: {0}, validation loss: {1:.2f}, validation accuracy: {2:.01%}".
               format(epoch + 1, loss_valid, acc_valid))
