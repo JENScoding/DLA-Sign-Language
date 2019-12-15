@@ -30,11 +30,11 @@ train = pd.read_csv('../sign-language-mnist/sign_mnist_train.csv')
 test = pd.read_csv('../sign-language-mnist/sign_mnist_test.csv')
 data = pd.concat([train, test], ignore_index=True)
 
-#Since our target variable are in categorical(nomial) - binarize the labels
+# Since our target variable are in categorical(nomial) - binarize the labels
 label_binarizer = LabelBinarizer()
 labels = label_binarizer.fit_transform(data['label'].values)
 
-#drop the labels from training dataset - first column
+# drop the labels from training dataset - first column
 data.drop('label', axis=1, inplace=True)
 
 # Reshape the images
