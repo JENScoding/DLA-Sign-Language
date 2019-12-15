@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -5,6 +6,24 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--test_size', type=float, default=0.2, help='size of test data')
+parser.add_argument('--val_size', type=float, default=0.2, help='size of validation data')
+parser.add_argument('--init_stddev', type=float, default=0.01, help='standard deviation of weight initialization')
+parser.add_argument('--epochs', type=int, default=10, help='number of training epochs')
+parser.add_argument('--batch_size', type=int, default=100, help='number of instances per batch')
+parser.add_argument('--keep_prob', type=float, default=0.7, help='keep probability for dropout layer')
+
+FLAGS = parser.parse_args()
+
+TEST_SIZE = FLAGS.test_size
+VAL_SIZE = FLAGS.val_size
+INIT_STDDEV = FLAGS.init_stddev
+EPOCHS = FLAGS.epochs
+BATCH_SIZE = FLAGS.batch_size
+
 
 # load data
 train = pd.read_csv('../sign-language-mnist/sign_mnist_train.csv')
@@ -22,14 +41,14 @@ data.drop('label', axis=1, inplace=True)
 images = data.values
 
 # split data set into training and test set - 70% - 30%
-x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=0.2, random_state=101)
+x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=TEST_SIZE, random_state=101)
 # split with validation data
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=101)
+x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=VAL_SIZE, random_state=101)
 
 # Define the helper Function
 # weights for convolutional layers - initialized randomly with truncated normal
 def weight_variable(shape):
-    initial = tf.random.truncated_normal(shape, stddev=0.05)
+    initial = tf.random.truncated_normal(shape, stddev=INIT_STDDEV)
     return(tf.Variable(initial))
 
 #bias in convolutional layers
@@ -96,8 +115,8 @@ full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 y_conv = full_layer(full1_drop, 24)
 
 # optimize batch size and number of steps
-epochs = 10
-batch_size = 100
+
+
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
@@ -134,16 +153,16 @@ with tf.compat.v1.Session() as sess:
 
     sess.run(tf.compat.v1.global_variables_initializer())
     summary_writer = tf.compat.v1.summary.FileWriter('./logs', sess.graph)
-    num_tr_iter = int(len(y_train) / batch_size)
+    num_tr_iter = int(len(y_train) / BATCH_SIZE)
     global_step = 0
 
-    for epoch in range(epochs):
+    for epoch in range(EPOCHS):
         print('Training epoch: {}'.format(epoch + 1))
 
         for i in range(num_tr_iter):
             global_step += 1
-            start = i * batch_size
-            end = (i + 1) * batch_size
+            start = i * BATCH_SIZE
+            end = (i + 1) * BATCH_SIZE
             batch_xs, batch_ys = get_next_batch(x_train, y_train, start, end)
 
             if i % 100 == 0:
