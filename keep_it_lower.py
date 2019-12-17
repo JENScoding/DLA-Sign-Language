@@ -128,7 +128,7 @@ def full_layer(input, size):
 tf.compat.v1.disable_eager_execution()
 
 # Define Placeholders or images and labels
-x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784])
+x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784], name='x')
 y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24])
 
 # reshape image data into 2D image format with size 28x28x1
@@ -149,11 +149,12 @@ conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
 full_1 = tf.nn.relu(full_layer(conv1_flat, 1024))
 
 # rate set to 1-keep_prob in TensorFlow2.0
-keep_prob = tf.compat.v1.placeholder(tf.float32)
+keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
 y_conv = full_layer(full1_drop, 24)
+y_pred = tf.argmax(y_conv, 1, name='y_pred')
 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
@@ -173,6 +174,9 @@ def get_next_batch(x, y, start, end):
     x_batch = x[start:end]
     y_batch = y[start:end]
     return x_batch, y_batch
+
+# create model saver
+saver = tf.compat.v1.train.Saver()
 
 #############--- start session and run model ---##########################
 
@@ -230,6 +234,10 @@ with tf.compat.v1.Session() as sess:
                                                  y_: Y[i],
                                                  keep_prob: 1.0})
                              for i in range(1)])
+
+    if not os.path.exists('./trained_models'):
+        os.makedirs('./trained_models')
+    saver.save(sess, './trained_model/model')
 
 print("test accuracy: {}".format(test_accuracy))
 
