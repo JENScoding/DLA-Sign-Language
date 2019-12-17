@@ -6,6 +6,7 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
+from keras.preprocessing.image import ImageDataGenerator
 
 
 parser = argparse.ArgumentParser()
@@ -14,7 +15,10 @@ parser.add_argument('--val_size', type=float, default=0.2, help='size of validat
 parser.add_argument('--init_stddev', type=float, default=0.01, help='standard deviation of weight initialization')
 parser.add_argument('--epochs', type=int, default=10, help='number of training epochs')
 parser.add_argument('--batch_size', type=int, default=100, help='number of instances per batch')
-parser.add_argument('--keep_prob', type=float, default=0.7, help='keep probability for dropout layer')
+parser.add_argument('--keep_prob', type=float, default=0.5, help='keep probability for dropout layer')
+parser.add_argument('--rotate', type=bool, default=False, help='rotate images by 0-20 degree')
+parser.add_argument('--vertical', type=bool, default=False, help='shift images vertically')
+parser.add_argument('--bright', type=bool, default=False, help='change brightness of images')
 
 FLAGS = parser.parse_args()
 
@@ -24,6 +28,9 @@ INIT_STDDEV = FLAGS.init_stddev
 EPOCHS = FLAGS.epochs
 BATCH_SIZE = FLAGS.batch_size
 KEEP_PROB = FLAGS.keep_prob
+ROTATE = FLAGS.rotate
+VERTICAL = FLAGS.vertical
+BRIGHT = FLAGS.bright
 
 
 # load data
@@ -39,12 +46,47 @@ labels = label_binarizer.fit_transform(data['label'].values)
 data.drop('label', axis=1, inplace=True)
 
 # Reshape the images
-images = data.values
+images = data.values/data.values.max()
 
 # split data set into training and test set - 70% - 30%
 x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=TEST_SIZE, random_state=101)
+
 # split with validation data
 x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=VAL_SIZE, random_state=101)
+
+if ROTATE==True:
+    #reshape images for rotation function
+    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+    #rotate images and append to complete data
+    from data_augmentation import rotation
+    images_new, labels_new = rotation(x_train, y_train, angle=30, size=round(len(x_train)/4))
+    x_train = np.concatenate((x_train, images_new), axis=0)
+    y_train = np.concatenate((y_train, labels_new), axis=0)
+    #reshape images for test split
+    x_train = np.array([i.flatten() for i in x_train])
+
+if VERTICAL==True:
+    #reshape images into format for vertical_shift functionx_train, y_train
+    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+    #shift images vertically and append to complete data
+    from data_augmentation import vertical_shift
+    images_new, labels_new = vertical_shift(x_train, y_train, range=[-5,5], size=round(len(x_train)/4))
+    images = np.concatenate((x_train, images_new), axis=0)
+    labels = np.concatenate((y_train, labels_new), axis=0)
+    #reshape images for test split
+    x_train = np.array([i.flatten() for i in x_train])
+
+if BRIGHT==True:
+    #reshape images into format for vertical_shift functionx_train, y_train
+    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+    #shift images vertically and append to complete data
+    from data_augmentation import brightness_change
+    images_new, labels_new = brightness_change(x_train, y_train, range=[0.2, 0.9], size=round(len(x_train)/4))
+    images = np.concatenate((x_train, images_new), axis=0)
+    labels = np.concatenate((y_train, labels_new), axis=0)
+    #reshape images for test split
+    x_train = np.array([i.flatten() for i in x_train])
+
 
 # Define the helper Function
 # weights for convolutional layers - initialized randomly with truncated normal
@@ -99,15 +141,12 @@ conv1_pool = max_pool_2x2(conv1)
 conv2 = conv_layer(conv1_pool, shape=[3, 3, 32, 64], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
 
-#conv3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name='conv3')
+#conv3 = conv_layer(conv2_pool, shape=[5, 5, 64, 128], name='conv3')
 #conv3_pool = max_pool_2x2(conv3)
 
-###########--- Ad 3rd layer ---##############!!
-
 # fully connected layer
-conv2_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
-full_1 = tf.nn.relu(full_layer(conv2_flat, 1024))
-
+conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
+full_1 = tf.nn.relu(full_layer(conv1_flat, 1024))
 
 # rate set to 1-keep_prob in TensorFlow2.0
 keep_prob = tf.compat.v1.placeholder(tf.float32)
@@ -115,9 +154,6 @@ full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
 y_conv = full_layer(full1_drop, 24)
-
-# optimize batch size and number of steps
-
 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
@@ -132,17 +168,6 @@ correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 ############## --- Define own next_batch function from MNIST --- ##############
-def next_batch(num, data, labels):
-    '''
-    Return a total of `num` random samples and labels.
-    '''
-    idx = np.arange(0 , len(data))
-    np.random.shuffle(idx)
-    idx = idx[:num]
-    data_shuffle = [data[i] for i in idx]
-    labels_shuffle = [labels[i] for i in idx]
-
-    return np.asarray(data_shuffle), np.asarray(labels_shuffle)
 
 def get_next_batch(x, y, start, end):
     x_batch = x[start:end]
