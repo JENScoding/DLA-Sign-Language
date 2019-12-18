@@ -225,6 +225,27 @@ with tf.compat.v1.Session() as sess:
               format(epoch + 1, loss_valid, acc_valid))
         print('---------------------------------------------------------')
 
+        if epoch == 0:
+            if not os.path.exists('./trained_model'):
+                os.makedirs('./trained_model')
+            saver.save(sess, './trained_model/model')
+            old_acc_valid = acc_valid
+            saver.restore(sess, './trained_model/model')
+            continue
+
+        if acc_valid <= old_acc_valid:
+            saver.restore(sess, './trained_model/model')
+            print('---------------------------------------------------------')
+            print('\t \t \t STOPPING EARLY')
+            print('---------------------------------------------------------')
+            break
+
+        else:
+            old_acc_valid = acc_valid
+            saver.save(sess, './trained_model/model')
+
+
+
 # aus buch - funktioniert mit Dimensionen nicht -eigentlich dataset in mehrer Gruppen splitten - len(x_test) aber Primzahl
     X = x_test.reshape(1, len(x_test), 784)
     Y = y_test.reshape(1, len(y_test), 24)
@@ -235,9 +256,7 @@ with tf.compat.v1.Session() as sess:
                                                  keep_prob: 1.0})
                              for i in range(1)])
 
-    if not os.path.exists('./trained_models'):
-        os.makedirs('./trained_models')
-    saver.save(sess, './trained_model/model')
+
 
 print("test accuracy: {}".format(test_accuracy))
 
