@@ -31,10 +31,14 @@ def load_and_transform(path):
     loads an image and transforms it so it can be classified
     """
 
-    img = Image.open(path, target_size=(49, 28)).convert('LA')
+    img = Image.open(path).convert('LA')
+    img = img.resize((img.size[0]//(img.size[1]//28), 28))
     img = np.array(img)[:, :, 0]
     img = square_img(img)
-    img = resize(img, (28, 28))
+    img = square_img(img)
     plt.imshow(img, cmap='Greys')
+    img = img.reshape(1, 784)
     return img
+
+
 
