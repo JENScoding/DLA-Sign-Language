@@ -3,10 +3,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 from collections import Counter
-import string
-import dill
+from dictionary import dict_letters
+
 
 # if you need to remove all names use the following:
 # import sys
@@ -14,9 +13,8 @@ import dill
 
 
 # load the dataset as with pandas
-os.chdir("./../sign-language-mnist")
-train = pd.read_csv("sign_mnist_train.csv")
-test = pd.read_csv("sign_mnist_test.csv")
+train = pd.read_csv("../sign-language-mnist/sign_mnist_train.csv")
+test = pd.read_csv("../sign-language-mnist/sign_mnist_test.csv")
 
 # show head of dataset
 print(train.head())
@@ -29,12 +27,6 @@ labels = train.iloc[:, 0]
 print(labels)
 print(min(labels), max(labels), Counter(labels))
 print(np.unique(labels))
-
-# dictonary for numbers of the labels
-un_labels = np.unique(labels)
-letters = np.delete(np.array(list(string.ascii_lowercase[0:25])), 9)
-s = pd.Series(letters, index=un_labels)
-dict_letters = s.to_dict()
 
 # drop the labels from training dataset - first column
 train.drop("label", axis=1, inplace=True)
@@ -49,7 +41,7 @@ print(images.shape)
 print(np.equal(train.values[10], images[10].flatten()))
 
 # plot images - how does it look like
-which = np.random.random_integers(0, 1000, 5)
+which = np.random.randint(0, 1000, 5)
 
 print(dict_letters[labels[which[0]]])
 plt.imshow(images[which[0]], cmap="Greys", interpolation="bicubic")
@@ -85,9 +77,6 @@ plt.imshow(images[all_ds[3]], cmap="Greys", interpolation="bicubic")
 plt.savefig("d3.png")
 plt.show()
 
-# save important variables:
-del letters, s, un_labels, which, all_ds
 
-dill.dump_session("../DLA-Sign-Language/data.pkl")
 
 
