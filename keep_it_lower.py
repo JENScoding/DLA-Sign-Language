@@ -2,7 +2,6 @@ import argparse
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-# import matplotlib.pyplot as plt
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
@@ -19,6 +18,8 @@ parser.add_argument('--keep_prob', type=float, default=0.5, help='keep probabili
 parser.add_argument('--rotate', type=bool, default=False, help='rotate images by 0-20 degree')
 parser.add_argument('--vertical', type=bool, default=False, help='shift images vertically')
 parser.add_argument('--bright', type=bool, default=False, help='change brightness of images')
+parser.add_argument('--lambda1', type=float, default=1e-10, help='hyperparameter for l1 regularizer')
+parser.add_argument('--lambda2', type=float, default=1e-6, help='hyperparameter for l2 regularizer')
 
 FLAGS = parser.parse_args()
 
@@ -31,6 +32,8 @@ KEEP_PROB = FLAGS.keep_prob
 ROTATE = FLAGS.rotate
 VERTICAL = FLAGS.vertical
 BRIGHT = FLAGS.bright
+LAMBDA1 = FLAGS.lambda1
+LAMBDA2 = FLAGS.lambda2
 
 
 # load data
@@ -46,7 +49,7 @@ labels = label_binarizer.fit_transform(data['label'].values)
 data.drop('label', axis=1, inplace=True)
 
 # Reshape the images
-images = data.values/data.values.max()
+images = data.values
 
 # split data set into training and test set - 70% - 30%
 x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=TEST_SIZE, random_state=101)
@@ -122,14 +125,14 @@ def full_layer(input, size):
     in_size = int(input.get_shape()[1])
     W = weight_variable([in_size, size])
     b = bias_variable([size])
-    return(tf.matmul(input, W) + b)
+    return([tf.matmul(input, W) + b, W])
 
 # enable eager execution - Tensorflow2.0?????
 tf.compat.v1.disable_eager_execution()
 
 # Define Placeholders or images and labels
 x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784], name='x')
-y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24])
+y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24], name='y_')
 
 # reshape image data into 2D image format with size 28x28x1
 x_image = tf.reshape(x, [-1, 28, 28, 1])
@@ -146,20 +149,26 @@ conv2_pool = max_pool_2x2(conv2)
 
 # fully connected layer
 conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
-full_1 = tf.nn.relu(full_layer(conv1_flat, 1024))
+full_0, weights_3 = full_layer(conv1_flat, 1024)
+full_1 = tf.nn.relu(full_0)
 
 # rate set to 1-keep_prob in TensorFlow2.0
 keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
-y_conv = full_layer(full1_drop, 24)
+y_conv, weights_4 = full_layer(full1_drop, 24)
 y_pred = tf.argmax(y_conv, 1, name='y_pred')
 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
-train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+# add regularisation penalties
+l1 = tf.reduce_sum(tf.abs(weights_3)) + tf.reduce_sum(tf.abs(weights_4))
+l2 = tf.nn.l2_loss(weights_3) + tf.nn.l2_loss(weights_4)
+shrinkage = tf.reduce_mean(cross_entropy + LAMBDA1 * l1 + LAMBDA2 * l2)
+
+train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
 
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 
