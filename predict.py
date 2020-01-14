@@ -39,7 +39,7 @@ def plot_images(images, cls_true, cls_pred=None, title=None):
         ax.imshow(images[i].reshape(28, 28), cmap='binary')
 
         # Show true and predicted classes.
-        ax_title = "True: {0}, Pred: {1}".format(dict_letters[cls_true[i]],
+        ax_title = "True: {0}, Pred: {1}".format(dict_pred[cls_true[i]],
                                                  dict_pred[cls_pred[i]])
 
         ax.set_title(ax_title)
