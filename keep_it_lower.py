@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-# from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator
 
 
 parser = argparse.ArgumentParser()
@@ -115,9 +115,6 @@ def max_pool_2x2(x):
 def conv_layer(input, shape, name):
     W = weight_variable(shape)
     b = bias_variable([shape[3]])
-    with tf.compat.v1.variable_scope(name):
-        tf.summary.histogram('weight', W)
-        tf.summary.histogram('bias', b)
     return(tf.nn.relu(conv2d(input, W) + b))
 
 # standard full layer with bias
@@ -169,8 +166,6 @@ l2 = tf.nn.l2_loss(weights_3) + tf.nn.l2_loss(weights_4)
 shrinkage = tf.reduce_mean(cross_entropy + LAMBDA1 * l1 + LAMBDA2 * l2)
 
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
-
-correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 
 #gd_step = tf.compat.v1.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
