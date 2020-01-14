@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-from keras.preprocessing.image import ImageDataGenerator
+# from keras.preprocessing.image import ImageDataGenerator
 
 
 parser = argparse.ArgumentParser()
