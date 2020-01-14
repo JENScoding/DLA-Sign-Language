@@ -13,4 +13,8 @@ letters = np.delete(np.array(list(string.ascii_lowercase[0:25])), 9)
 s = pd.Series(letters, index=un_labels)
 dict_letters = s.to_dict()
 
+# dictionary for prediction -> delete entry with j
+s = pd.Series(letters)
+dict_pred = s.to_dict()
+
 del letters, s, train_lab, un_labels
