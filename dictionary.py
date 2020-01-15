@@ -9,7 +9,7 @@ train_lab = pd.read_csv("../sign-language-mnist/sign_mnist_train.csv")
 
 # dictonary for numbers of the labels
 un_labels = np.unique(train_lab.iloc[:, 0])
-letters = np.delete(np.array(list(string.ascii_lowercase[0:25])), 9)
+letters = np.delete(np.array(list(string.ascii_uppercase[0:25])), 9)
 s = pd.Series(letters, index=un_labels)
 dict_letters = s.to_dict()
 
