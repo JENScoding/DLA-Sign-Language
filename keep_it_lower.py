@@ -143,7 +143,7 @@ conv2_pool = max_pool_2x2(conv2)
 
 # fully connected layer
 conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*16])
-full_0, weights_3 = full_layer(conv1_flat, 256)
+full_0, weights_3 = full_layer(conv1_flat, 512)
 full_1 = tf.nn.relu(full_0)
 
 # rate set to 1-keep_prob in TensorFlow2.0
