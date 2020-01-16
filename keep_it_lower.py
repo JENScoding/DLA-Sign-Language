@@ -189,7 +189,7 @@ with tf.compat.v1.Session() as sess:
     global_step = 0
 
     for epoch in range(EPOCHS):
-        print('Training epoch: {}'.format(epoch + 1))
+        print(f"Training epoch:  {epoch + 1}")
 
         for i in range(num_tr_iter):
             global_step += 1
@@ -201,7 +201,7 @@ with tf.compat.v1.Session() as sess:
                 train_accuracy = sess.run(accuracy, feed_dict={x: batch_xs,
                                                             y_: batch_ys,
                                                             keep_prob: 1.0})
-                print("step {}, training accuracy {}".format(i, train_accuracy))
+                print(f"step {i}, training accuracy {train_accuracy}")
 
             sess.run(train_step, feed_dict={x: batch_xs,
                                             y_: batch_ys,
@@ -214,16 +214,14 @@ with tf.compat.v1.Session() as sess:
                                                                                       keep_prob: 1.0})
 
 
-                print("iter {0:3d}:\t Loss={1:.2f},\tTraining Accuracy={2:.01%}".
-                      format(i, loss_batch, acc_batch))
+                print(f"iter {i:3d}:\t Loss={loss_batch:.2f},\tTraining Accuracy={acc_batch:.01%}")
 
         # Run validation after every epoch
         loss_valid, acc_valid = sess.run([cross_entropy, accuracy], feed_dict={x: x_val,
                                                                       y_: y_val,
                                                                       keep_prob: KEEP_PROB})
         print('---------------------------------------------------------')
-        print("Epoch: {0}, validation loss: {1:.2f}, validation accuracy: {2:.01%}".
-              format(epoch + 1, loss_valid, acc_valid))
+        print(f"Epoch: {epoch + 1}, validation loss: {loss_valid:.2f}, validation accuracy: {acc_valid:.01%}")
         print('---------------------------------------------------------')
 
         if epoch == 0:
@@ -259,5 +257,5 @@ with tf.compat.v1.Session() as sess:
 
 
 
-print("test accuracy: {}".format(test_accuracy))
+print(f"test accuracy: {test_accuracy}")
 
