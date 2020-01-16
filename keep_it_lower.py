@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-from keras.preprocessing.image import ImageDataGenerator
+# from keras.preprocessing.image import ImageDataGenerator
 
 
 parser = argparse.ArgumentParser()
@@ -115,7 +115,7 @@ def max_pool_2x2(x):
 def conv_layer(input, shape, name):
     W = weight_variable(shape)
     b = bias_variable([shape[3]])
-    return(tf.nn.relu(conv2d(input, W) + b))
+    return([tf.nn.relu(conv2d(input, W) + b), W])
 
 # standard full layer with bias
 def full_layer(input, size):
@@ -135,18 +135,15 @@ y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24], name='y_')
 x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # two layers of convolution and pooling
-conv1 = conv_layer(x_image, shape=[3, 3, 1, 32], name="conv1")
+conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 8], name="conv1")
 conv1_pool = max_pool_2x2(conv1)
 
-conv2 = conv_layer(conv1_pool, shape=[3, 3, 32, 64], name="conv2")
+conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 8, 16], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
 
-#conv3 = conv_layer(conv2_pool, shape=[5, 5, 64, 128], name='conv3')
-#conv3_pool = max_pool_2x2(conv3)
-
 # fully connected layer
-conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*64])
-full_0, weights_3 = full_layer(conv1_flat, 1024)
+conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*16])
+full_0, weights_3 = full_layer(conv1_flat, 256)
 full_1 = tf.nn.relu(full_0)
 
 # rate set to 1-keep_prob in TensorFlow2.0
@@ -161,8 +158,8 @@ y_pred = tf.argmax(y_conv, 1, name='y_pred')
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
 # add regularisation penalties
-l1 = tf.reduce_sum(tf.abs(weights_3)) + tf.reduce_sum(tf.abs(weights_4))
-l2 = tf.nn.l2_loss(weights_3) + tf.nn.l2_loss(weights_4)
+l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) + tf.reduce_sum(tf.abs(weights_3)) + tf.reduce_sum(tf.abs(weights_4))
+l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) + tf.nn.l2_loss(weights_3) + tf.nn.l2_loss(weights_4)
 shrinkage = tf.reduce_mean(cross_entropy + LAMBDA1 * l1 + LAMBDA2 * l2)
 
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
