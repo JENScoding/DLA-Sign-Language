@@ -12,14 +12,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--test_size', type=float, default=0.2, help='size of test data')
 parser.add_argument('--val_size', type=float, default=0.2, help='size of validation data')
 parser.add_argument('--init_stddev', type=float, default=0.01, help='standard deviation of weight initialization')
-parser.add_argument('--epochs', type=int, default=10, help='number of training epochs')
+parser.add_argument('--epochs', type=int, default=50, help='number of training epochs')
 parser.add_argument('--batch_size', type=int, default=100, help='number of instances per batch')
-parser.add_argument('--keep_prob', type=float, default=0.5, help='keep probability for dropout layer')
+parser.add_argument('--keep_prob', type=float, default=0.6, help='keep probability for dropout layer')
 parser.add_argument('--rotate', type=bool, default=False, help='rotate images by 0-20 degree')
 parser.add_argument('--vertical', type=bool, default=False, help='shift images vertically')
 parser.add_argument('--bright', type=bool, default=False, help='change brightness of images')
 parser.add_argument('--lambda1', type=float, default=1e-10, help='hyperparameter for l1 regularizer')
-parser.add_argument('--lambda2', type=float, default=1e-6, help='hyperparameter for l2 regularizer')
+parser.add_argument('--lambda2', type=float, default=0.001, help='hyperparameter for l2 regularizer')
 
 FLAGS = parser.parse_args()
 
@@ -137,7 +137,7 @@ x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # two layers of convolution and pooling
 conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16], name="conv1")
-conv1_pool = max_pool_2x2(conv1
+conv1_pool = max_pool_2x2(conv1)
 keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 conv1_pool = tf.compat.v1.nn.dropout(conv1_pool, rate=1-keep_prob)
 
@@ -216,7 +216,6 @@ with tf.compat.v1.Session() as sess:
                 train_accuracy = sess.run(accuracy, feed_dict={x: batch_xs,
                                                             y_: batch_ys,
                                                             keep_prob: 1.0})
-                print(f"step {i}, training accuracy {train_accuracy}")
 
             sess.run(train_step, feed_dict={x: batch_xs,
                                             y_: batch_ys,
