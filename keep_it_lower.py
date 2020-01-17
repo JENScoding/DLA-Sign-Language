@@ -136,15 +136,23 @@ y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24], name='y_')
 x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # two layers of convolution and pooling
-conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 8], name="conv1")
+conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16], name="conv1")
 conv1_pool = max_pool_2x2(conv1)
 
-conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 8, 16], name="conv2")
+conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
 
+conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
+conv3_pool = max_pool_2x2(conv3)
+
+#conv4, weights_4 = conv_layer(conv3_pool, shape=[3, 3, 128, 256], name="conv4")
+#conv4_pool = max_pool_2x2(conv4)
+
+#print(conv3_pool.shape)
+
 # fully connected layer
-conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*16])
-full_0, weights_3 = full_layer(conv1_flat, 512)
+conv1_flat = tf.reshape(conv3_pool, [-1, 4*4*64])
+full_0, weights_4 = full_layer(conv1_flat, 256)
 full_1 = tf.nn.relu(full_0)
 
 # rate set to 1-keep_prob in TensorFlow2.0
