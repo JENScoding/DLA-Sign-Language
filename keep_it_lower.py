@@ -162,15 +162,17 @@ full_1 = tf.nn.relu(full_0)
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
-y_conv, weights_4 = full_layer(full1_drop, 24)
+y_conv, weights_5 = full_layer(full1_drop, 24)
 y_pred = tf.argmax(y_conv, 1, name='y_pred')
 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
 # add regularisation penalties
-l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) + tf.reduce_sum(tf.abs(weights_3)) + tf.reduce_sum(tf.abs(weights_4))
-l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) + tf.nn.l2_loss(weights_3) + tf.nn.l2_loss(weights_4)
+l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) + tf.reduce_sum(tf.abs(weights_3)) \
+     + tf.reduce_sum(tf.abs(weights_4)) + tf.reduce_sum(tf.abs(weights_5))
+l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) + tf.nn.l2_loss(weights_3) \
+     + tf.nn.l2_loss(weights_4) + tf.nn.l2_loss(weights_5)
 shrinkage = tf.reduce_mean(cross_entropy + LAMBDA1 * l1 + LAMBDA2 * l2)
 
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
