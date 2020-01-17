@@ -188,6 +188,7 @@ with tf.compat.v1.Session() as sess:
     summary_writer = tf.compat.v1.summary.FileWriter('./logs', sess.graph)
     num_tr_iter = int(len(y_train) / BATCH_SIZE)
     global_step = 0
+    stop_count = 0
 
     for epoch in range(EPOCHS):
         print(f"Training epoch:  {epoch + 1}")
@@ -234,13 +235,16 @@ with tf.compat.v1.Session() as sess:
             continue
 
         if acc_valid <= old_acc_valid:
-            saver.restore(sess, './trained_model/model')
-            print('---------------------------------------------------------')
-            print('\t \t \t STOPPING EARLY')
-            print('---------------------------------------------------------')
-            break
+            stop_count += 1
+            if stop_count == 3:
+                saver.restore(sess, './trained_model/model')
+                print('---------------------------------------------------------')
+                print('\t \t \t STOPPING EARLY')
+                print('---------------------------------------------------------')
+                break
 
         else:
+            stop_count = 0
             old_acc_valid = acc_valid
             saver.save(sess, './trained_model/model')
 
