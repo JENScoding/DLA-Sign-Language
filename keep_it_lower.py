@@ -141,6 +141,8 @@ conv1_pool = max_pool_2x2(conv1)
 
 conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
+keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
+conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
 conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
 conv3_pool = max_pool_2x2(conv3)
@@ -156,7 +158,7 @@ full_0, weights_4 = full_layer(conv1_flat, 256)
 full_1 = tf.nn.relu(full_0)
 
 # rate set to 1-keep_prob in TensorFlow2.0
-keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
+
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
