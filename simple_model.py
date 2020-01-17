@@ -106,29 +106,31 @@ with tf.compat.v1.Session() as sess:
 
     sess.run(tf.compat.v1.global_variables_initializer())
     summary_writer = tf.compat.v1.summary.FileWriter('./logs', sess.graph)
-    num_tr_iter = int(len(y_train) / 50)
+    num_tr_iter = int(len(y_train) / 100)
     global_step = 0
 
-    for epoch in range(50):
+    for epoch in range(20):
         print(f"Training epoch:  {epoch + 1}")
 
         for i in range(num_tr_iter):
             global_step += 1
-            start = i * 50
-            end = (i + 1) * 50
+            start = i * 100
+            end = (i + 1) * 100
             batch_xs, batch_ys = get_next_batch(x_train, y_train, start, end)
 
-            if i % 50 == 0:
+            # run backpropagation
+            sess.run(train_step, feed_dict={x: batch_xs,
+                                            y_: batch_ys,
+                                            keep_prob: 1.0})
+
+            if i % 100 == 0:
                 train_accuracy = sess.run(accuracy, feed_dict={x: batch_xs,
                                                             y_: batch_ys,
                                                             keep_prob: 1.0})
                 print(f"step {i}, training accuracy {train_accuracy}")
 
-            sess.run(train_step, feed_dict={x: batch_xs,
-                                            y_: batch_ys,
-                                            keep_prob: 1.0})
 
-            if i % 50 == 0:
+            if i % 100 == 0:
                 # Calculate and display the batch loss and accuracy
                 loss_batch, acc_batch = sess.run([cross_entropy, accuracy], feed_dict={x: batch_xs,
                                                                                       y_: batch_ys,
@@ -146,15 +148,15 @@ with tf.compat.v1.Session() as sess:
         print('---------------------------------------------------------')
 
         if epoch == 0:
-            if not os.path.exists('./trained_model'):
-                os.makedirs('./trained_model')
-            saver.save(sess, './trained_model/model')
+            if not os.path.exists('./trained_model_simple'):
+                os.makedirs('./trained_model_simple')
+            saver.save(sess, './trained_model_simple/model')
             old_acc_valid = acc_valid
-            saver.restore(sess, './trained_model/model')
+            saver.restore(sess, './trained_model_simple/model')
             continue
 
         if acc_valid <= old_acc_valid:
-            saver.restore(sess, './trained_model/model')
+            saver.restore(sess, './trained_model_simple/model')
             print('---------------------------------------------------------')
             print('\t \t \t STOPPING EARLY')
             print('---------------------------------------------------------')
@@ -162,21 +164,19 @@ with tf.compat.v1.Session() as sess:
 
         else:
             old_acc_valid = acc_valid
-            saver.save(sess, './trained_model/model')
+            saver.save(sess, './trained_model_simple/model')
 
 
 
-# aus buch - funktioniert mit Dimensionen nicht -eigentlich dataset in mehrer Gruppen splitten - len(x_test) aber Primzahl
-    X = x_test.reshape(1, len(x_test), 784)
-    Y = y_test.reshape(1, len(y_test), 24)
+# run model on test data
 
     test_accuracy = np.mean([sess.run(accuracy,
-                                      feed_dict={x: X[i],
-                                                 y_: Y[i],
-                                                 keep_prob: 1.0})
-                             for i in range(1)])
+                                      feed_dict={x: x_test,
+                                                 y_: y_test,
+                                                 keep_prob: 1.0})])
 
 
 
 print(f"test accuracy: {test_accuracy}")
 
+# test accuracy of 0.99927 after 31 Epochs
