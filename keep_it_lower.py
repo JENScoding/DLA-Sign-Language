@@ -259,16 +259,11 @@ with tf.compat.v1.Session() as sess:
 
 
 # aus buch - funktioniert mit Dimensionen nicht -eigentlich dataset in mehrer Gruppen splitten - len(x_test) aber Primzahl
-    X = x_test.reshape(1, len(x_test), 784)
-    Y = y_test.reshape(1, len(y_test), 24)
 
     test_accuracy = np.mean([sess.run(accuracy,
-                                      feed_dict={x: X[i],
-                                                 y_: Y[i],
-                                                 keep_prob: 1.0})
-                             for i in range(1)])
-
-
+                                      feed_dict={x: x_test,
+                                                 y_: y_test,
+                                                 keep_prob: 1.0})])
 
 print(f"test accuracy: {test_accuracy}")
 
