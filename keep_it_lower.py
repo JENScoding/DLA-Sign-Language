@@ -43,16 +43,17 @@ data = pd.concat([train, test], ignore_index=True)
 
 # Since our target variable are in categorical(nomial) - binarize the labels
 label_binarizer = LabelBinarizer()
-labels = label_binarizer.fit_transform(data['label'].values)
+y_train = label_binarizer.fit_transform(train['label'].values)
+y_test = label_binarizer.fit_transform(test['label'].values)
 
 # drop the labels from training dataset - first column
-data.drop('label', axis=1, inplace=True)
+train.drop('label', axis=1, inplace=True)
+test.drop('label', axis=1, inplace=True)
 
 # Reshape the images
-images = data.values
+x_train = train.values
+x_test = test.values
 
-# split data set into training and test set - 70% - 30%
-x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=TEST_SIZE, random_state=101)
 
 # split with validation data
 x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=VAL_SIZE, random_state=101)
