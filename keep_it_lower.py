@@ -239,7 +239,6 @@ with tf.compat.v1.Session() as sess:
                 os.makedirs('./trained_model')
             saver.save(sess, './trained_model/model')
             old_acc_valid = acc_valid
-            saver.restore(sess, './trained_model/model')
             continue
 
         if acc_valid <= old_acc_valid:
@@ -250,6 +249,7 @@ with tf.compat.v1.Session() as sess:
                 print('\t \t \t STOPPING EARLY')
                 print('---------------------------------------------------------')
                 break
+            old_acc_valid = acc_valid
 
         else:
             stop_count = 0
