@@ -137,11 +137,12 @@ x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # two layers of convolution and pooling
 conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16], name="conv1")
-conv1_pool = max_pool_2x2(conv1)
+conv1_pool = max_pool_2x2(conv1
+keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
+conv1_pool = tf.compat.v1.nn.dropout(conv1_pool, rate=1-keep_prob)
 
 conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
-keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
 conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
