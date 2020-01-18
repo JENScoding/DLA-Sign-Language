@@ -79,4 +79,9 @@ plt.show()
 
 
 
+# check for potential duplicates in the data
 
+np.sum(pd.DataFrame.duplicated(train))
+np.sum(pd.DataFrame.duplicated(test))
+
+pd.DataFrame.any(pd.DataFrame.duplicated(train))
