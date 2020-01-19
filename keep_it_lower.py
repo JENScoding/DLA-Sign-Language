@@ -18,8 +18,8 @@ parser.add_argument('--keep_prob', type=float, default=0.6, help='keep probabili
 parser.add_argument('--rotate', type=bool, default=False, help='rotate images by 0-20 degree')
 parser.add_argument('--vertical', type=bool, default=False, help='shift images vertically')
 parser.add_argument('--bright', type=bool, default=False, help='change brightness of images')
-parser.add_argument('--lambda1', type=float, default=1e-10, help='hyperparameter for l1 regularizer')
-parser.add_argument('--lambda2', type=float, default=0.001, help='hyperparameter for l2 regularizer')
+parser.add_argument('--mixl1l2', type=float, default=1e-10, help='mix ration parameter regularizer')
+parser.add_argument('--Lambda', type=float, default=0.002, help='hyperparameter for l1 and l2 regularizer')
 
 FLAGS = parser.parse_args()
 
@@ -32,8 +32,8 @@ KEEP_PROB = FLAGS.keep_prob
 ROTATE = FLAGS.rotate
 VERTICAL = FLAGS.vertical
 BRIGHT = FLAGS.bright
-LAMBDA1 = FLAGS.lambda1
-LAMBDA2 = FLAGS.lambda2
+MIXL1L2 = FLAGS.mixl1l2
+LAMBDA = FLAGS.Lambda
 
 
 # load data
@@ -174,7 +174,7 @@ l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) + tf.re
      + tf.reduce_sum(tf.abs(weights_4)) + tf.reduce_sum(tf.abs(weights_5))
 l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) + tf.nn.l2_loss(weights_3) \
      + tf.nn.l2_loss(weights_4) + tf.nn.l2_loss(weights_5)
-shrinkage = tf.reduce_mean(cross_entropy + LAMBDA1 * l1 + LAMBDA2 * l2)
+shrinkage = tf.reduce_mean(cross_entropy + MIXL1L2 * LAMBDA + (1 - MIXL1L2) / 2 * LAMBDA * l2)
 
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
 
@@ -228,14 +228,14 @@ with tf.compat.v1.Session() as sess:
                                                                                       keep_prob: 1.0})
 
 
-                print(f"iter {i:3d}:\t Loss={loss_batch:.2f},\tTraining Accuracy={acc_batch:.01%}")
+                print(f"iter {i:3d}:\t Loss={loss_batch:.3f},\tTraining Accuracy={acc_batch:.5%}")
 
         # Run validation after every epoch
         loss_valid, acc_valid = sess.run([cross_entropy, accuracy], feed_dict={x: x_val,
                                                                       y_: y_val,
                                                                       keep_prob: KEEP_PROB})
         print('---------------------------------------------------------')
-        print(f"Epoch: {epoch + 1}, validation loss: {loss_valid:.2f}, validation accuracy: {acc_valid:.01%}")
+        print(f"Epoch: {epoch + 1}, validation loss: {loss_valid:.3f}, validation accuracy: {acc_valid:.5%}")
         print('---------------------------------------------------------')
 
         if epoch == 0:
@@ -269,5 +269,5 @@ with tf.compat.v1.Session() as sess:
                                                  y_: y_test,
                                                  keep_prob: 1.0})])
 
-print(f"test accuracy: {test_accuracy}")
+print(f"test accuracy: {test_accuracy:.5%}")
 
