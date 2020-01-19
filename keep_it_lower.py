@@ -15,9 +15,9 @@ parser.add_argument('--init_stddev', type=float, default=0.01, help='standard de
 parser.add_argument('--epochs', type=int, default=50, help='number of training epochs')
 parser.add_argument('--batch_size', type=int, default=100, help='number of instances per batch')
 parser.add_argument('--keep_prob', type=float, default=0.6, help='keep probability for dropout layer')
-parser.add_argument('--rotate', type=bool, default=False, help='rotate images by 0-20 degree')
-parser.add_argument('--vertical', type=bool, default=False, help='shift images vertically')
-parser.add_argument('--bright', type=bool, default=False, help='change brightness of images')
+parser.add_argument('--rotate', type=bool, default=True, help='rotate images by 0-20 degree')
+parser.add_argument('--vertical', type=bool, default=True, help='shift images vertically')
+parser.add_argument('--bright', type=bool, default=True, help='change brightness of images')
 parser.add_argument('--mixl1l2', type=float, default=1e-10, help='mix ration parameter regularizer')
 parser.add_argument('--Lambda', type=float, default=0.002, help='hyperparameter for l1 and l2 regularizer')
 
@@ -63,7 +63,7 @@ if ROTATE==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #rotate images and append to complete data
     from data_augmentation import rotation
-    images_new, labels_new = rotation(x_train, y_train, angle=30, size=round(len(x_train)/4))
+    images_new, labels_new = rotation(x_train, y_train, angle=30, size=round(len(x_train)/3))
     x_train = np.concatenate((x_train, images_new), axis=0)
     y_train = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
@@ -74,7 +74,7 @@ if VERTICAL==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #shift images vertically and append to complete data
     from data_augmentation import vertical_shift
-    images_new, labels_new = vertical_shift(x_train, y_train, range=[-5,5], size=round(len(x_train)/4))
+    images_new, labels_new = vertical_shift(x_train, y_train, range=[-5,5], size=round(len(x_train)/3))
     images = np.concatenate((x_train, images_new), axis=0)
     labels = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
@@ -85,7 +85,7 @@ if BRIGHT==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #shift images vertically and append to complete data
     from data_augmentation import brightness_change
-    images_new, labels_new = brightness_change(x_train, y_train, range=[0.2, 0.9], size=round(len(x_train)/4))
+    images_new, labels_new = brightness_change(x_train, y_train, range=[0.2, 0.9], size=round(len(x_train)/3))
     images = np.concatenate((x_train, images_new), axis=0)
     labels = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
@@ -145,8 +145,8 @@ conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
 conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
-conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
-conv3_pool = max_pool_2x2(conv3)
+# conv3_pool = max_pool_2x2(conv3)
+# conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
 
 #conv4, weights_4 = conv_layer(conv3_pool, shape=[3, 3, 128, 256], name="conv4")
 #conv4_pool = max_pool_2x2(conv4)
@@ -154,7 +154,7 @@ conv3_pool = max_pool_2x2(conv3)
 #print(conv3_pool.shape)
 
 # fully connected layer
-conv1_flat = tf.reshape(conv3_pool, [-1, 4*4*64])
+conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*32])
 full_0, weights_4 = full_layer(conv1_flat, 256)
 full_1 = tf.nn.relu(full_0)
 
@@ -170,9 +170,9 @@ y_pred = tf.argmax(y_conv, 1, name='y_pred')
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
 # add regularisation penalties
-l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) + tf.reduce_sum(tf.abs(weights_3)) \
+l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) \
      + tf.reduce_sum(tf.abs(weights_4)) + tf.reduce_sum(tf.abs(weights_5))
-l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) + tf.nn.l2_loss(weights_3) \
+l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) \
      + tf.nn.l2_loss(weights_4) + tf.nn.l2_loss(weights_5)
 shrinkage = tf.reduce_mean(cross_entropy + MIXL1L2 * LAMBDA + (1 - MIXL1L2) / 2 * LAMBDA * l2)
 
@@ -201,7 +201,7 @@ with tf.compat.v1.Session() as sess:
     summary_writer = tf.compat.v1.summary.FileWriter('./logs', sess.graph)
     num_tr_iter = int(len(y_train) / BATCH_SIZE)
     global_step = 0
-    stop_count = 0
+
 
     for epoch in range(EPOCHS):
         print(f"Training epoch:  {epoch + 1}")
@@ -242,20 +242,20 @@ with tf.compat.v1.Session() as sess:
             if not os.path.exists('./trained_model'):
                 os.makedirs('./trained_model')
             saver.save(sess, './trained_model/model')
-            old_loss_valid = loss_valid
+            best_loss_valid = loss_valid
             continue
 
-        if (loss_valid / old_loss_valid - 1) * 100 > 2.5:
+        if loss_valid < best_loss_valid:
+            best_loss_valid = loss_valid
+
+        if (loss_valid / best_loss_valid - 1) * 100 > 3.5:
             saver.restore(sess, './trained_model/model')
             print('---------------------------------------------------------')
             print('\t \t \t STOPPING EARLY')
             print('---------------------------------------------------------')
             break
-            old_loss_valid = loss_valid
 
         else:
-            stop_count = 0
-            old_loss_valid = loss_valid
             saver.save(sess, './trained_model/model')
 
 
