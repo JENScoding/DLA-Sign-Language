@@ -245,14 +245,12 @@ with tf.compat.v1.Session() as sess:
             old_loss_valid = loss_valid
             continue
 
-        if loss_valid >= old_loss_valid:
-            stop_count += 1
-            if stop_count == 2:
-                saver.restore(sess, './trained_model/model')
-                print('---------------------------------------------------------')
-                print('\t \t \t STOPPING EARLY')
-                print('---------------------------------------------------------')
-                break
+        if (loss_valid / old_loss_valid - 1) * 100 > 2.5:
+            saver.restore(sess, './trained_model/model')
+            print('---------------------------------------------------------')
+            print('\t \t \t STOPPING EARLY')
+            print('---------------------------------------------------------')
+            break
             old_loss_valid = loss_valid
 
         else:
