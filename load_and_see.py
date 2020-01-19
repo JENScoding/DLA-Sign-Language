@@ -85,3 +85,20 @@ np.sum(pd.DataFrame.duplicated(train))
 np.sum(pd.DataFrame.duplicated(test))
 
 pd.DataFrame.any(pd.DataFrame.duplicated(train))
+
+# check for potiential similar pics
+
+# load the dataset as with pandas
+# train = pd.read_csv("../sign-language-mnist/sign_mnist_train.csv")
+# test = pd.read_csv("../sign-language-mnist/sign_mnist_test.csv")
+
+# see_diff = np.zeros((len(train),len(train)))
+# for i in range(0, len(train)):
+#    for k in range(0, len(train) - 1):
+#        train_drop = train.drop(i)
+#        if train.iloc[i,0] == train_drop.iloc[k,0]:
+#            see_diff[i,k] = np.sum(np.abs(train.iloc[i] - train_drop.iloc[k]))
+#        else:
+#            see_diff[i,k] = 0
+
+
