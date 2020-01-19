@@ -242,22 +242,20 @@ with tf.compat.v1.Session() as sess:
             if not os.path.exists('./trained_model'):
                 os.makedirs('./trained_model')
             saver.save(sess, './trained_model/model')
-            old_acc_valid = acc_valid
+            old_loss_valid = loss_valid
             continue
 
-        if acc_valid <= old_acc_valid:
-            stop_count += 1
-            if stop_count == 3:
-                saver.restore(sess, './trained_model/model')
-                print('---------------------------------------------------------')
-                print('\t \t \t STOPPING EARLY')
-                print('---------------------------------------------------------')
-                break
-            old_acc_valid = acc_valid
+        if (loss_valid / old_loss_valid - 1) * 100 > 2.5:
+            saver.restore(sess, './trained_model/model')
+            print('---------------------------------------------------------')
+            print('\t \t \t STOPPING EARLY')
+            print('---------------------------------------------------------')
+            break
+            old_loss_valid = loss_valid
 
         else:
             stop_count = 0
-            old_acc_valid = acc_valid
+            old_loss_valid = loss_valid
             saver.save(sess, './trained_model/model')
 
 
