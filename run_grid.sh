@@ -6,7 +6,7 @@ do
 	for mixl1l2 in {1e-6, 1e-8, 1e-10, 0}
 	do
 		for lambda in {0.01, 0.001, 0.0001, 0}	
-		do python parameter_test.py --mixl1l2 "$mixl1l2" --lambda "$lambda" --epochs 50 --keep_prob "$drop"
+		do python parameter_test.py --mixl1l2 "$mixl1l2" --Lambda "$lambda" --epochs 50 --keep_prob "$drop"
 			echo "Lambda is: $lambda"
 		done
 		echo "The mixing ratio is: $mixl1l2"
