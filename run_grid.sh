@@ -1,12 +1,17 @@
 #!/bin/bash
 cd "${0%/*}"
-for mixl1l2 in {1e-8,1e-10,0}
-do
-	echo "The following runs were tested with l1 = $l1"
-	for lambda in {0.005,0.001,0.0005}	
-	do python keep_it_lower.py --lambda1 "$l1" --lambda2 "$l2" --epochs 30 --keep_prob 1
-		echo "Second parameter was setted to l2 = $l2"
+
+for drop in {0.7, 0.6, 0.5, 1}
+do   
+	for mixl1l2 in {1e-6, 1e-8, 1e-10, 0}
+	do
+		for lambda in {0.01, 0.001, 0.0001, 0}	
+		do python parameter_test.py --mixl1l2 "$mixl1l2" --lambda "$lambda" --epochs 50 --keep_prob "$drop"
+			echo "Lambda is: $lambda"
+		done
+		echo "The mixing ratio is: $mixl1l2"
 	done
+	echo "Dropout is: $drop"
 done
 
 
