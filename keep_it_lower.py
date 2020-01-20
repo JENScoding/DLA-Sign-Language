@@ -63,7 +63,7 @@ if ROTATE==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #rotate images and append to complete data
     from data_augmentation import rotation
-    images_new, labels_new = rotation(x_train, y_train, angle=30, size=round(len(x_train)/3))
+    images_new, labels_new = rotation(x_train, y_train, angle=30, size=2000)
     x_train = np.concatenate((x_train, images_new), axis=0)
     y_train = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
@@ -74,9 +74,9 @@ if VERTICAL==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #shift images vertically and append to complete data
     from data_augmentation import vertical_shift
-    images_new, labels_new = vertical_shift(x_train, y_train, range=[-5,5], size=round(len(x_train)/3))
-    images = np.concatenate((x_train, images_new), axis=0)
-    labels = np.concatenate((y_train, labels_new), axis=0)
+    images_new, labels_new = vertical_shift(x_train, y_train, range=[-5,5], size=2000)
+    x_train = np.concatenate((x_train, images_new), axis=0)
+    y_train = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
     x_train = np.array([i.flatten() for i in x_train])
 
@@ -85,9 +85,9 @@ if BRIGHT==True:
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
     #shift images vertically and append to complete data
     from data_augmentation import brightness_change
-    images_new, labels_new = brightness_change(x_train, y_train, range=[0.2, 0.9], size=round(len(x_train)/3))
-    images = np.concatenate((x_train, images_new), axis=0)
-    labels = np.concatenate((y_train, labels_new), axis=0)
+    images_new, labels_new = brightness_change(x_train, y_train, range=[0.2, 0.9], size=2000)
+    x_train = np.concatenate((x_train, images_new), axis=0)
+    y_train = np.concatenate((y_train, labels_new), axis=0)
     #reshape images for test split
     x_train = np.array([i.flatten() for i in x_train])
 
