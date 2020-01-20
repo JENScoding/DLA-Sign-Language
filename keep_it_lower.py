@@ -174,7 +174,7 @@ l1 = tf.reduce_sum(tf.abs(weights_1)) + tf.reduce_sum(tf.abs(weights_2)) \
      + tf.reduce_sum(tf.abs(weights_4)) + tf.reduce_sum(tf.abs(weights_5))
 l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) \
      + tf.nn.l2_loss(weights_4) + tf.nn.l2_loss(weights_5)
-shrinkage = tf.reduce_mean(cross_entropy + MIXL1L2 * LAMBDA + (1 - MIXL1L2) / 2 * LAMBDA * l2)
+shrinkage = tf.reduce_mean(cross_entropy + MIXL1L2 * LAMBDA + (1 - MIXL1L2) * LAMBDA * l2)
 
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
 
