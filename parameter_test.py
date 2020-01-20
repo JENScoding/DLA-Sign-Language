@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-# from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator
 
 
 parser = argparse.ArgumentParser()
@@ -145,14 +145,6 @@ conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
 conv2_pool = max_pool_2x2(conv2)
 conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
-# conv3_pool = max_pool_2x2(conv3)
-# conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
-
-#conv4, weights_4 = conv_layer(conv3_pool, shape=[3, 3, 128, 256], name="conv4")
-#conv4_pool = max_pool_2x2(conv4)
-
-#print(conv3_pool.shape)
-
 # fully connected layer
 conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*32])
 full_0, weights_4 = full_layer(conv1_flat, 256)
@@ -244,9 +236,6 @@ with tf.compat.v1.Session() as sess:
 
         if (loss_valid / best_loss_valid - 1) * 100 > 4:
             saver.restore(sess, './trained_model/model')
-            print('---------------------------------------------------------')
-            print('\t \t \t STOPPING EARLY')
-            print('---------------------------------------------------------')
             break
 
         else:
