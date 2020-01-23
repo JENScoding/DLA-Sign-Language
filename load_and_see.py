@@ -1,18 +1,13 @@
 # Load data and see how it looks like
 
+# import modules
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import Counter
 from dictionary import dict_letters
 
-
-# if you need to remove all names use the following:
-# import sys
-# sys.modules[__name__].__dict__.clear()
-
-
-# load the dataset as with pandas
+# load the dataset
 train = pd.read_csv("../sign-language-mnist/sign_mnist_train.csv")
 test = pd.read_csv("../sign-language-mnist/sign_mnist_test.csv")
 
@@ -41,9 +36,9 @@ print(images.shape)
 print(np.equal(train.values[10], images[10].flatten()))
 
 # plot images - how does it look like
-which = np.random.randint(0, 1000, 5)
+which = np.random.randint(0, 1000, 5)  # take random images
 
-print(dict_letters[labels[which[0]]])
+print(dict_letters[labels[which[0]]])  # label with dict
 plt.imshow(images[which[0]], cmap="Greys", interpolation="bicubic")
 plt.show()
 
@@ -80,11 +75,11 @@ plt.show()
 
 
 # check for potential duplicates in the data
-
 np.sum(pd.DataFrame.duplicated(train))
 np.sum(pd.DataFrame.duplicated(test))
 
-pd.DataFrame.any(pd.DataFrame.duplicated(train))
+pd.DataFrame.any(pd.DataFrame.duplicated(train)) # no picture is twice in the data
+
 
 # check for potiential similar pics
 

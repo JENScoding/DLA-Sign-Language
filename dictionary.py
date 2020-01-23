@@ -1,4 +1,4 @@
-# dictionary for numbers
+# dictionary for labels: translate numbers to letters
 
 import pandas as pd
 import numpy as np

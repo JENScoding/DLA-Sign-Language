@@ -4,7 +4,7 @@
 import argparse
 import numpy as np
 import pandas as pd
-import tensorflow as tf # tensorflow 2.0
+import tensorflow as tf  # tensorflow 2.0
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
@@ -116,7 +116,7 @@ def max_pool_2x2(x):
                           strides=[1, 2, 2, 1], padding='SAME'))
 
 # linear convolution with bias, followed by ReLU nonlinearity
-def conv_layer(input, shape, name):
+def conv_layer(input, shape):
     W = weight_variable(shape)
     b = bias_variable([shape[3]])
     return([tf.nn.relu(conv2d(input, W) + b), W])
@@ -131,20 +131,20 @@ def full_layer(input, size):
 # enable eager execution
 tf.compat.v1.disable_eager_execution()
 
-# Define Placeholders or images and labels
+# Define Placeholders for images, labels and keep prob
 x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784], name='x')
 y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24], name='y_')
+keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 
 # reshape image data into 2D image format with size 28x28x1, 28x28 pixels in one channel
 x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 # two layers of convolution and pooling, using 16 and 32 filters respectively
-conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16], name="conv1")
+conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16])
 conv1_pool = max_pool_2x2(conv1)
-keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 conv1_pool = tf.compat.v1.nn.dropout(conv1_pool, rate=1-keep_prob)
 
-conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
+conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32])
 conv2_pool = max_pool_2x2(conv2)
 conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
@@ -209,8 +209,8 @@ with tf.compat.v1.Session() as sess:
                                             y_: batch_ys,
                                             keep_prob: KEEP_PROB})
 
+            # after 100 iterations calculate and display the batch loss and accuracy
             if i % 100 == 0:
-                # Calculate and display the batch loss and accuracy
                 loss_batch, acc_batch = sess.run([cross_entropy, accuracy], feed_dict={x: batch_xs,
                                                                                       y_: batch_ys,
                                                                                       keep_prob: 1.0})
