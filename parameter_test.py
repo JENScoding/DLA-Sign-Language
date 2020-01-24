@@ -1,3 +1,5 @@
+# This is a copy of keep_it_lower. But at the end only the test accuracy is printed
+
 import argparse
 import numpy as np
 import pandas as pd

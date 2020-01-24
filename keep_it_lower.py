@@ -1,13 +1,16 @@
+# Main script: Algorithm to train model
+
+# import modules
 import argparse
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import tensorflow as tf  # tensorflow 2.0
 import os
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-# from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import ImageDataGenerator
 
-
+# use parser to change parameters directly in terminal
 parser = argparse.ArgumentParser()
 parser.add_argument('--test_size', type=float, default=0.2, help='size of test data')
 parser.add_argument('--val_size', type=float, default=0.2, help='size of validation data')
@@ -39,7 +42,6 @@ LAMBDA = FLAGS.Lambda
 # load data
 train = pd.read_csv('../sign-language-mnist/sign_mnist_train.csv')
 test = pd.read_csv('../sign-language-mnist/sign_mnist_test.csv')
-data = pd.concat([train, test], ignore_index=True)
 
 # Since our target variable are in categorical(nomial) - binarize the labels
 label_binarizer = LabelBinarizer()
@@ -55,9 +57,10 @@ x_train = train.values
 x_test = test.values
 
 
-# split with validation data
+# split training data to training and validation
 x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=VAL_SIZE, random_state=101)
 
+# Use data augmentation to combat overfitting. Rotate, shift and change brightness of images
 if ROTATE==True:
     #reshape images for rotation function
     x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
@@ -98,7 +101,7 @@ def weight_variable(shape):
     initial = tf.random.truncated_normal(shape, stddev=INIT_STDDEV)
     return(tf.Variable(initial))
 
-#bias in convolutional layers
+# bias in convolutional layers
 def bias_variable(shape):
     initial = tf.constant(0.01, shape=shape)
     return(tf.Variable(initial))
@@ -107,66 +110,57 @@ def bias_variable(shape):
 def conv2d(x, W):
     return(tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME'))
 
-# max pool = half the size across height/width - 1/4 size of feature map
+# max pool, using 2x2 batches of the feature map
 def max_pool_2x2(x):
     return(tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                           strides=[1, 2, 2, 1], padding='SAME'))
 
 # linear convolution with bias, followed by ReLU nonlinearity
-def conv_layer(input, shape, name):
+def conv_layer(input, shape):
     W = weight_variable(shape)
     b = bias_variable([shape[3]])
     return([tf.nn.relu(conv2d(input, W) + b), W])
 
-# standard full layer with bias
+# standard fully connected layer with bias
 def full_layer(input, size):
     in_size = int(input.get_shape()[1])
     W = weight_variable([in_size, size])
     b = bias_variable([size])
     return([tf.matmul(input, W) + b, W])
 
-# enable eager execution - Tensorflow2.0?????
+# enable eager execution
 tf.compat.v1.disable_eager_execution()
 
-# Define Placeholders or images and labels
+# Define Placeholders for images, labels and keep prob
 x = tf.compat.v1.placeholder(tf.float32, shape=[None, 784], name='x')
 y_ = tf.compat.v1.placeholder(tf.float32, shape=[None, 24], name='y_')
+keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 
-# reshape image data into 2D image format with size 28x28x1
+# reshape image data into 2D image format with size 28x28x1, 28x28 pixels in one channel
 x_image = tf.reshape(x, [-1, 28, 28, 1])
 
-# two layers of convolution and pooling
-conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16], name="conv1")
+# two layers of convolution and pooling, using 16 and 32 filters respectively
+conv1, weights_1 = conv_layer(x_image, shape=[3, 3, 1, 16])
 conv1_pool = max_pool_2x2(conv1)
-keep_prob = tf.compat.v1.placeholder(tf.float32, name='keep_prob')
 conv1_pool = tf.compat.v1.nn.dropout(conv1_pool, rate=1-keep_prob)
 
-conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32], name="conv2")
+conv2, weights_2 = conv_layer(conv1_pool, shape=[3, 3, 16, 32])
 conv2_pool = max_pool_2x2(conv2)
 conv2_pool = tf.compat.v1.nn.dropout(conv2_pool, rate=1-keep_prob)
 
-# conv3_pool = max_pool_2x2(conv3)
-# conv3, weights_3 = conv_layer(conv2_pool, shape=[3, 3, 32, 64], name="conv3")
-
-#conv4, weights_4 = conv_layer(conv3_pool, shape=[3, 3, 128, 256], name="conv4")
-#conv4_pool = max_pool_2x2(conv4)
-
-#print(conv3_pool.shape)
-
-# fully connected layer
+# fully connected layer, activate with relu
 conv1_flat = tf.reshape(conv2_pool, [-1, 7*7*32])
 full_0, weights_4 = full_layer(conv1_flat, 256)
 full_1 = tf.nn.relu(full_0)
 
-# rate set to 1-keep_prob in TensorFlow2.0
-
+# rate set to 1-keep_prob
 full1_drop = tf.compat.v1.nn.dropout(full_1, rate=1 - keep_prob)
 
 # output = fully connected layer with 24 units(labels of handsigns)
 y_conv, weights_5 = full_layer(full1_drop, 24)
 y_pred = tf.argmax(y_conv, 1, name='y_pred')
 
-
+# calculate loss by using softmax on logit model and apply cross entropy
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv, labels=y_))
 
 # add regularisation penalties
@@ -176,15 +170,14 @@ l2 = tf.nn.l2_loss(weights_1) + tf.nn.l2_loss(weights_2) \
      + tf.nn.l2_loss(weights_4) + tf.nn.l2_loss(weights_5)
 shrinkage = tf.reduce_mean(cross_entropy + MIXL1L2 * LAMBDA + (1 - MIXL1L2) * LAMBDA * l2)
 
+# optimization with Adams optimizer
 train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(shrinkage)
 
-#gd_step = tf.compat.v1.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
-
+# predict values and get accuracy
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-############## --- Define own next_batch function from MNIST --- ##############
-
+# define own next_batch function from MNIST
 def get_next_batch(x, y, start, end):
     x_batch = x[start:end]
     y_batch = y[start:end]
@@ -193,36 +186,31 @@ def get_next_batch(x, y, start, end):
 # create model saver
 saver = tf.compat.v1.train.Saver()
 
-#############--- start session and run model ---##########################
-
+# start session and run model
 with tf.compat.v1.Session() as sess:
 
+    # initialize weights and biases and set iteration length
     sess.run(tf.compat.v1.global_variables_initializer())
-    summary_writer = tf.compat.v1.summary.FileWriter('./logs', sess.graph)
     num_tr_iter = int(len(y_train) / BATCH_SIZE)
     global_step = 0
 
-
+    # loop through epochs
     for epoch in range(EPOCHS):
         print(f"Training epoch:  {epoch + 1}")
 
+        # loop through iterations while calculating loss and accuracy for each
         for i in range(num_tr_iter):
             global_step += 1
             start = i * BATCH_SIZE
             end = (i + 1) * BATCH_SIZE
             batch_xs, batch_ys = get_next_batch(x_train, y_train, start, end)
 
-            if i % 100 == 0:
-                train_accuracy = sess.run(accuracy, feed_dict={x: batch_xs,
-                                                            y_: batch_ys,
-                                                            keep_prob: 1.0})
-
             sess.run(train_step, feed_dict={x: batch_xs,
                                             y_: batch_ys,
                                             keep_prob: KEEP_PROB})
 
+            # after 100 iterations calculate and display the batch loss and accuracy
             if i % 100 == 0:
-                # Calculate and display the batch loss and accuracy
                 loss_batch, acc_batch = sess.run([cross_entropy, accuracy], feed_dict={x: batch_xs,
                                                                                       y_: batch_ys,
                                                                                       keep_prob: 1.0})
@@ -238,6 +226,7 @@ with tf.compat.v1.Session() as sess:
         print(f"Epoch: {epoch + 1}, validation loss: {loss_valid:.3f}, validation accuracy: {acc_valid:.5%}")
         print('---------------------------------------------------------')
 
+        # implement early stopping
         if epoch == 0:
             if not os.path.exists('./trained_model'):
                 os.makedirs('./trained_model')
@@ -248,7 +237,7 @@ with tf.compat.v1.Session() as sess:
         if loss_valid < best_loss_valid:
             best_loss_valid = loss_valid
 
-        if (loss_valid / best_loss_valid - 1) * 100 > 3.5:
+        if (loss_valid / best_loss_valid - 1) * 100 > 4:
             saver.restore(sess, './trained_model/model')
             print('---------------------------------------------------------')
             print('\t \t \t STOPPING EARLY')
@@ -260,8 +249,8 @@ with tf.compat.v1.Session() as sess:
 
 
 
-# aus buch - funktioniert mit Dimensionen nicht -eigentlich dataset in mehrer Gruppen splitten - len(x_test) aber Primzahl
 
+    # test model performance on test data
     test_accuracy = np.mean([sess.run(accuracy,
                                       feed_dict={x: x_test,
                                                  y_: y_test,
