@@ -1,6 +1,7 @@
 # Predict new input data
 
 # import modules
+import seaborn
 import pandas as pd
 import tensorflow as tf
 import numpy as np
@@ -75,23 +76,19 @@ def plot_example_errors(images, cls_true, cls_pred, title=None):
 # load data
 train = pd.read_csv('../sign-language-mnist/sign_mnist_train.csv')
 test = pd.read_csv('../sign-language-mnist/sign_mnist_test.csv')
-data = pd.concat([train, test], ignore_index=True)
 
 # Since our target variable are in categorical(nomial) - binarize the labels
 label_binarizer = LabelBinarizer()
-labels = label_binarizer.fit_transform(data['label'].values)
+y_train = label_binarizer.fit_transform(train['label'].values)
+y_test = label_binarizer.fit_transform(test['label'].values)
 
 # drop the labels from training dataset - first column
-data.drop('label', axis=1, inplace=True)
+train.drop('label', axis=1, inplace=True)
+test.drop('label', axis=1, inplace=True)
 
 # Reshape the images
-images = data.values
-
-# split data set into training and test set - 70% - 30%
-x_train, x_test, y_train, y_test = train_test_split(images, labels, test_size=0.3, random_state=101)
-
-X = x_test.reshape(1, len(x_test), 784)
-Y = y_test.reshape(1, len(y_test), 24)
+x_train = train.values
+x_test = test.values
 
 # retrieve prediction values from model
 with tf.compat.v1.Session() as sess:
@@ -102,12 +99,47 @@ with tf.compat.v1.Session() as sess:
     x = graph.get_tensor_by_name('x:0')
     y_ = graph.get_tensor_by_name('y_:0')
     keep_prob = graph.get_tensor_by_name('keep_prob:0')
-    for i in range(1):
-        cls_pred = sess.run(y_pred, feed_dict={x: X[i], y_: Y[i], keep_prob: 1.0})
 
+    cls_pred = sess.run(y_pred, feed_dict={x: x_test, y_: y_test, keep_prob: 1.0})
 
-# plot correct and incorrected predicted examples
+y_lab = []
+
+for i in range(y_test.shape[0]):
+    y_lab.append(np.argmax(y_test[i,]))
+
+y_lab = np.array(y_lab)
+
+print(cls_pred)
+print(y_lab)
+
+#plot correct and incorrect predicted examples
 cls_true = np.argmax(y_test, axis=1)
 plot_images(x_test, cls_true, cls_pred, title='Correct Examples')
 plot_example_errors(x_test, cls_true, cls_pred, title='Misclassified Examples')
 plt.show()
+
+
+#plot confusion matrix
+confusion = tf.math.confusion_matrix(y_lab, cls_pred,
+                                     num_classes=24, weights=None, dtype=tf.dtypes.int32, name=None)
+
+sess = tf.compat.v1.Session()
+with sess.as_default():
+        print(sess.run(confusion))
+        x = sess.run(confusion)
+
+x = np.around(x.astype('float') / x.sum(axis=1)[:, np.newaxis], decimals=2)
+x_df = pd.DataFrame(x,
+                    index=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                           'S', 'T', 'U', 'V', 'W', 'X', 'Y'],
+                    columns=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                             'S', 'T', 'U', 'V', 'W', 'X', 'Y'])
+
+figure = plt.figure(figsize=(24, 24))
+seaborn.heatmap(x_df, annot=True, cmap='cividis')
+#plt.tight_layout()
+plt.ylabel('True label')
+plt.xlabel('Predicted label')
+plt.show()
+
+
