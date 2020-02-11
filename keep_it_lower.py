@@ -12,21 +12,19 @@ from keras.preprocessing.image import ImageDataGenerator
 
 # use parser to change parameters directly in terminal
 parser = argparse.ArgumentParser()
-parser.add_argument('--test_size', type=float, default=0.2, help='size of test data')
 parser.add_argument('--val_size', type=float, default=0.2, help='size of validation data')
 parser.add_argument('--init_stddev', type=float, default=0.01, help='standard deviation of weight initialization')
 parser.add_argument('--epochs', type=int, default=50, help='number of training epochs')
 parser.add_argument('--batch_size', type=int, default=100, help='number of instances per batch')
-parser.add_argument('--keep_prob', type=float, default=0.6, help='keep probability for dropout layer')
+parser.add_argument('--keep_prob', type=float, default=0.7, help='keep probability for dropout layer')
 parser.add_argument('--rotate', type=bool, default=True, help='rotate images by 0-20 degree')
 parser.add_argument('--vertical', type=bool, default=True, help='shift images vertically')
 parser.add_argument('--bright', type=bool, default=True, help='change brightness of images')
-parser.add_argument('--mixl1l2', type=float, default=1e-10, help='mix ration parameter regularizer')
-parser.add_argument('--Lambda', type=float, default=0.002, help='hyperparameter for l1 and l2 regularizer')
+parser.add_argument('--mixl1l2', type=float, default=0, help='mix ration parameter regularizer')
+parser.add_argument('--Lambda', type=float, default=0, help='hyperparameter for l1 and l2 regularizer')
 
 FLAGS = parser.parse_args()
 
-TEST_SIZE = FLAGS.test_size
 VAL_SIZE = FLAGS.val_size
 INIT_STDDEV = FLAGS.init_stddev
 EPOCHS = FLAGS.epochs
@@ -236,6 +234,7 @@ with tf.compat.v1.Session() as sess:
 
         if loss_valid < best_loss_valid:
             best_loss_valid = loss_valid
+            saver.save(sess, './trained_model/model')
 
         if (loss_valid / best_loss_valid - 1) * 100 > 4:
             saver.restore(sess, './trained_model/model')
@@ -243,9 +242,6 @@ with tf.compat.v1.Session() as sess:
             print('\t \t \t STOPPING EARLY')
             print('---------------------------------------------------------')
             break
-
-        else:
-            saver.save(sess, './trained_model/model')
 
 
 
@@ -257,4 +253,3 @@ with tf.compat.v1.Session() as sess:
                                                  keep_prob: 1.0})])
 
 print(f"test accuracy: {test_accuracy:.5%}")
-
